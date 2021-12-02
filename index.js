@@ -50,7 +50,8 @@ app.post('/webhook', function (req, res) {
         res.status(500).end()
     });
   }else if(query.includes("Present Tense")){
-    let word = req.body.queryResult.parameters['word'] //JSON request from dialogflow
+    let word = req.body.queryResult.parameters['word']
+     //JSON request from dialogflow
    
     presentTense(word).then((output) => {
       console.log(output)
@@ -65,7 +66,9 @@ app.post('/webhook', function (req, res) {
         res.status(500).end()
     });
   }else if(query.includes("Past simple")){
-    let word = req.body.queryResult.parameters['word'] //JSON request from dialogflow
+    let word = req.body.queryResult.parameters['word'] 
+    let wordsimplepast = req.body.queryResult.parameters['wordsimplepast']
+    //JSON request from dialogflow
     pastSimple(word).then((output) => {
       console.log(output)
       // Return the results of the API to Dialogflow
@@ -101,7 +104,12 @@ app.post('/webhook', function (req, res) {
     if(yes == "Yes" || yes == "yes" || yes == "YES"){
     
       try{
-        past = req.body.queryResult.fulfillmentText;   
+        past = req.body.queryResult.fulfillmentText;
+        console.log(yes)
+        console.log(past)
+        past = past.replace("What is the present tense of the word \"", "");
+        past = past.replace("\"?", ""); 
+        console.log(past)  
       }catch(TypeError){}
     }
      var cond = false;
@@ -113,8 +121,9 @@ app.post('/webhook', function (req, res) {
         past = past.replace('"?', "")
         past = past.replace(" ","")
         past = past.replace('?', "")
-        console.log("word: "+past);
-        stopPracticePresent(past).then((output) => {
+        let word2 = req.body.queryResult.parameters['word'];
+        console.log("word1234: "+word2);
+        stopPracticePresent(word2).then((output) => {
           console.log(output)
           // Return the results of the API to Dialogflow
           res.setHeader('Content-Type', 'application/json');
@@ -210,6 +219,72 @@ app.post('/webhook', function (req, res) {
           });
         }
     } 
+  }else if(query.includes("practice_past_simple")){
+    let word1 = req.body.queryResult.queryText;
+    
+    yes = req.body.queryResult.queryText;
+    console.log("><<>><<<<<<"+yes)
+    if(yes == "Yes" || yes == "yes" || yes == "YES"){
+    
+      try{
+        past = req.body.queryResult.fulfillmentText;
+        console.log(yes)
+        console.log(past)
+        past = past.replace("What is the simple past tense  of the word \"", "");
+        past = past.replace("\"?", "");
+      }catch(TypeError){}
+    }
+    
+    var cond = false;
+      if(query.includes(" no")){
+    
+        console.log("word1: "+query);
+        stopPracticeSimple(past).then((output) => {
+          console.log(output)
+          // Return the results of the API to Dialogflow
+          res.setHeader('Content-Type', 'application/json');
+          res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+          res.status(200).end();
+          }).catch((error) => {
+            // If there is an error let the user know
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+            res.status(500).end()
+        });;
+      }else{
+        if(word1 != "no" || word1 != "No" || word1 != "NO") {
+          cond = false;
+        
+          console.log(cond)
+          checkPastSimple(word1, cond).then((output) => {
+          console.log(output)
+          // Return the results of the API to Dialogflow
+          res.setHeader('Content-Type', 'application/json');
+          res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+          res.status(200).end();
+          }).catch((error) => {
+            // If there is an error let the user know
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+            res.status(500).end()
+      });
+      }else{
+          cond = true;
+          console.log("else;"+cond)
+          checkPastSimple(word1, cond).then((output) => {
+            console.log(output)
+            // Return the results of the API to Dialogflow
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+            res.status(200).end();
+            }).catch((error) => {
+              // If there is an error let the user know
+              res.setHeader('Content-Type', 'application/json');
+              res.send(JSON.stringify({ 'speech': output, 'fulfillment_text': output }));
+              res.status(500).end()
+          });
+        }
+    } 
   }else if(query.includes("practice_future_tense")){
 let word = req.body.queryResult.queryText;//JSON request from dialogflow
  
@@ -218,7 +293,7 @@ let word = req.body.queryResult.queryText;//JSON request from dialogflow
     if(yes == "Yes" || yes == "yes" || yes == "YES"){
     
       try{
-        past = req.body.queryResult.fulfillmentText;   
+        past = req.body.queryResult.parameters['word1'];   
       }catch(TypeError){}
     }
      var cond = false;
@@ -302,10 +377,10 @@ function presentTense(word){
       var url = host+path;
       (async function(){
         const response = await superagent.get(url)
-        var result = JSON.stringify(response.body.conjugation_tables.indicative[1].forms[0][1]);
+        var result = JSON.stringify(response.body.conjugation_tables.indicative[0].forms[2][1]);
         result = result.replace('am', '');
-        let output = "The present tense of the verb '"+word+"' is "+result;
-        output = output + ". Would you like to practice more present tenses with me?"
+        let output = "The simple present tense of that verb is "+result;
+        output = output + ". Would you like to practice more simple present tenses with me?"
         resolve(output);
       })();
       
@@ -323,7 +398,8 @@ function stopPractice(word){
         const response = await superagent.get(url)
         var result = JSON.stringify(response.body.conjugated_forms[2][1]);
         result = result.replace(/['"]+/g, '');
-        let output = "The past participle of "+word+" is "+result;
+        let output = "The past participle of "+word+" is "+result; 
+        
         resolve(output);
       })();
       
@@ -332,16 +408,16 @@ function stopPractice(word){
     });
 }
 
-function stopPracticePresent(word){
+function stopPracticePresent(word2){
  return new Promise((resolve, reject) => {
-      let path = `/rest/english/conjugate?verb=${encodeURIComponent(word)}`;
+      let path = `/rest/english/conjugate?verb=${encodeURIComponent(word2)}`;
       console.log('API Request: ' + host + path);
       var url = host+path;
       (async function(){
         const response = await superagent.get(url)
-        var result = JSON.stringify(response.body.conjugation_tables.indicative[1].forms[0][1]);
+        var result = JSON.stringify(response.body.conjugation_tables.indicative[0].forms[2][1]);
         result = result.replace(/['"]+/g, '');
-        let output = "The present tense of "+word+" is "+result;
+        let output = "The simple present tense of '"+word2+"' is "+result +"'.";
         resolve(output);
       })();
       
@@ -359,7 +435,7 @@ function stopPracticeFuture(word){
         const response = await superagent.get(url)
          var result = JSON.stringify(response.body.conjugation_tables.indicative[8].forms[0][1]);
         result = result.replace(/['"]+/g, '');
-        let output = "The Future Tense of "+word+" is "+result;
+        let output = "The future tense of that word is "+result;
         resolve(output);
       })();
       
@@ -378,8 +454,8 @@ function pastSimple(word){
         const response = await superagent.get(url)
         var result = JSON.stringify(response.body.conjugated_forms[1][1]);
         
-        let output = "The past simple tense of the verb '"+word+"' is "+result;
-        output = output + ". Would you like to practice more past participle tenses with me?"
+        let output = "The past simple tense of the verb  "+word+" is "+result;
+         output = output + ". Would you like to practice more past simple tenses with me?"
         resolve(output);
       })();
       
@@ -395,9 +471,9 @@ function futureTense(word){
       var url = host+path;
       (async function(){
         const response = await superagent.get(url)
-        var result = JSON.stringify(response.body.conjugation_tables.indicative[1].forms[0][1]);
+        var result = JSON.stringify(response.body.conjugation_tables.indicative[8].forms[0][1]);
         result = result.replace('am', '');
-        let output = "The future tense of the verb '"+word+"' is "+result;
+        let output = "The future tense of that verb is "+result;
         output = output + ". Would you like to practice more future tenses with me?"
         resolve(output);
       })();
@@ -421,12 +497,12 @@ function checkParticiple(word1, answer){
         
         if(answer == false) {
           if(result == word1) {
-            resolve("Great job! The past participle of the word "+check+' is '+result+" Would you like to try again?");
+            resolve("Great job! The past participle of that word is "+ result+". Would you like to practice more?");
           }else{
-            resolve("Wrong! Would you like to try again?")
+            resolve("That's not correct. Would you like to try again? If yes, kindly enter the past participle of that word, otherwise type 'no' if you want to reveal the correct answer.")
           }
         }else{
-          resolve("The past participle of the word "+check+' is '+result+" \n.?");
+          resolve("The past participle of that word  is "+result+" \n.?");
         }
         console.log(result);
       
@@ -436,31 +512,30 @@ function checkParticiple(word1, answer){
 }
 
 
-
-function checkPresent(word1, answer){
+function checkPresent(word, answer){
   return new Promise((resolve, reject ) => {
-     let path = `/rest/english/conjugate?verb=${encodeURIComponent(word1)}`;
+     let path = `/rest/english/conjugate?verb=${encodeURIComponent(word)}`;
      console.log(true);
      var url = host+path;
       (async function(){
         const response = await superagent.get(url)
-        var result = JSON.stringify(response.body.conjugation_tables.indicative[1].forms[0][1]);
+        var result = JSON.stringify(response.body.conjugation_tables.indicative[0].forms[2][1]);
         var check = JSON.stringify(response.body.conjugated_forms[0][1]);
         result = result.replace(/['"]+/g, '');
-        word1 = word1.replace(/['"]+/g, '');
+        word = word.replace(/['"]+/g, '');
         check = check.replace("to ", '');
         result = result.replace("am", '');
         result = result.replace(" ","")
-        console.log("IM here: result: "+result +" : "+word1)
+        console.log("IM here: result: "+result +" : "+word)
         
         if(answer == false) {
-          if(result == word1) {
-            resolve("Great job! The Present Tense of the word "+check+' is '+result+" Would you like to try again?");
+          if(result == word) {
+            resolve("Great job! The present tense of that word is "+result+".");
           }else{
-            resolve("Wrong! Would you like to try again?")
+            resolve("That's not correct. Would you like to try again? If yes, kindly enter the simple present tense of that word, otherwise type 'no' if you want to reveal the correct answer.")
           }
         }else{
-          resolve("The Present Tense of the word "+check+' is '+result+" \n.?");
+          resolve("The present tense "+' is '+result+" \n.?");
         }
         console.log(result);
       
@@ -487,15 +562,62 @@ function checkFuture(word1, answer){
         if(answer == false) {
           if(result == word1) {
             
-            resolve("Great job! The Future Tense of the word "+check+' is '+result+" Would you like to try again?");
+            resolve("Great job! The future tense of the word "+check+' is '+result+".");
           }else{
-            resolve("Wrong! Would you like to try again?")
+            resolve("That's not correct. Would you like to try again? If yes, kindly enter the future tense of that word, otherwise type 'no' if you want to reveal the correct answer.")
           }
         }else{
-          resolve("The Future Tense of the word "+check+' is '+result+" \n.?");
+          resolve("The future tense of the word "+' is '+result+" \n.?");
         }
         console.log(result);
       
       })();
   }).catch(alert);
+}
+
+function checkPastSimple(wordsimplepast, answer){
+  return new Promise((resolve, reject ) => {
+     let path = `/rest/english/conjugate?verb=${encodeURIComponent(wordsimplepast)}`;
+     var url = host+path;
+      (async function(){
+        const response = await superagent.get(url)
+        var result = JSON.stringify(response.body.conjugated_forms[2][1]);
+        var check = JSON.stringify(response.body.conjugated_forms[0][1]);
+        result = result.replace(/['"]+/g, '');
+        wordsimplepast = wordsimplepast.replace(/['"]+/g, '');
+        check = check.replace("to ", '');
+        
+        if(answer == false) {
+          if(result == wordsimplepast) {
+            resolve("Great job! The simple past tense of that word is "+ result+".");
+          }else{
+            resolve("That's not correct. Would you like to try again? If yes, kindly enter the simple past tense of that word, otherwise type 'no' if you want to reveal the correct answer.")
+          }
+        }else{
+          resolve("The past simple past tense of that word  is "+result+" \n.?");
+        }
+        console.log(result);
+      
+      })();
+  }).catch(alert);
+  
+}
+
+function stopPracticeSimple(word){
+ return new Promise((resolve, reject) => {
+      let path = `/rest/english/conjugate?verb=${encodeURIComponent(word)}`;
+      console.log('API Request: ' + host + path);
+      var url = host+path;
+      (async function(){
+        const response = await superagent.get(url)
+        var result = JSON.stringify(response.body.conjugated_forms[2][1]);
+        result = result.replace(/['"]+/g, '');
+        let output = "The simple past tense of "+word+" is "+result; 
+        
+        resolve(output);
+      })();
+      
+    }).catch((alert) => {
+      console.log(alert);
+    });
 }
